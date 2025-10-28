@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.proyectofinal.ui.components.BottomNavigationBar
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +33,7 @@ fun EventDetailScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
     Scaffold(
-        bottomBar = { BottomNavigationBar() }
+        bottomBar = { BottomNavigationBar(selected = "explorar", navController = navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
