@@ -13,6 +13,8 @@ import com.example.proyectofinal.ui.screens.NotificationsScreen
 import com.example.proyectofinal.ui.screens.ProfileScreen
 import com.example.proyectofinal.ui.screens.EventDetailScreen
 import com.example.proyectofinal.ui.screens.ExploreScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,10 +47,18 @@ class MainActivity : ComponentActivity() {
                     }
 
                     // Rutas secundarias que no están en el BottomBar
-                    composable("detalle_evento") {
-                        EventDetailScreen(navController = navController)
+                    composable(
+                        route = "detalle_evento/{eventId}",
+                        arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        // Obtener el ID del argumento
+                        val eventId = backStackEntry.arguments?.getString("eventId")
 
+                        // Llamar a la pantalla de detalle, pasándole el ID
+                        // NOTA: Tendrás que modificar EventDetailScreen para aceptar el ID.
+                        EventDetailScreen(navController = navController)
                     }
+
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.example.proyectofinal.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -136,7 +137,7 @@ fun ExploreScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(events) { event ->
-                    EventCard(event)
+                    EventCard(event, navController)
                 }
             }
         }
@@ -151,9 +152,12 @@ data class Event(
 )
 
 @Composable
-fun EventCard(event: Event) {
+fun EventCard(event: Event, navController: NavController) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            // Suponemos que el 'title' es único y lo usamos como ID por ahora
+            .clickable { navController.navigate("detalle_evento/${event.title}") },
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Column(modifier = Modifier.weight(2f)) {
