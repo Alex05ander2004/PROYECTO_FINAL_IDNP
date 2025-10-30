@@ -26,39 +26,17 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
 import com.example.proyectofinal.ui.components.BottomNavigationBar
+import com.example.proyectofinal.data.EventDataSource // Importar el origen de datos
+import com.example.proyectofinal.data.Event // Importar la data class
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(navController: NavController) {
     val categories = listOf("Música", "Deportes", "Teatro", "Cine", "Arte")
 
-    val events = listOf(
-        Event(
-            "Concierto", "Festival de Jazz",
-            "Central Park, Nueva York · 15 de julio · $30",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuA1z92clRkUOnFYwlWU8UTh4buLTtxm0IzzcQ85gVF3YRZHcPlKXfzy3MbwSH3ns5SBcTAHlxXg8GGMqm3_s06ad7jMFIAKlJTKIJKku3ShkuVG8HeeO-eN4KSJ1Gpz7gu5oRjiO6gq8GdpUMGFR95evhpi_U-GGVBrLfVv7AV7axkOU8hue9tP4Hl9IYTUzlx2E202XpP8YGXYFGdcAbUQ8TPxlYVa3CADgWKHCUQyn6-1lxDnIWSLVPrpIWuYThm8_PbxbTQq_dJZ"
-        ),
-        Event(
-            "Deporte", "Maratón de la ciudad",
-            "Calles de la ciudad · 22 de julio · $50",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuDEl2YLn-bjRazMUMFpKWOPgj-hEFjPBoZ4u2bsAOuiEgQYSqsp8JoGbREOyErHEKiQVWHchylgUO_pYAlelDqY7onpbTxq9pNEDVXyP6KiGCBo_lCrTAV8ReaHK5bMoG2tY_zgGAKrtDBl39nvZPCHdb08u5bA8lk3g8hF9tZ3gCzdRLX3uOC5TxW6mBR1zB2lcQqYX2gfHZZ8-TeRIr98JSh0Wb6r-3dmsR6L7ZPrs5F_Xki4NW2sSeZsooWm-PxzFi9ROMpIhyxv"
-        ),
-        Event(
-            "Teatro", "El Fantasma de la Ópera",
-            "Teatro Majestic, Nueva York · 29 de julio · $80",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuCROhCrA-vVUySeIyDoQnj0mv-ZBHM-wtr1ZTOIY0zruTNdm8YFTplu9hDSp5KLP9FnkjdXiga7gCQCm3JftR_hKG0Fv6hMNmj9EdguT8UFhzuVe1CBQRd70f8XI83q0phaINbazdWQaMke6xQ7yR10_E3ZlIxgqYY352yezzSN8thbJxPSd-jnOHhdrZf2Zmrjs01tNiB9TMkbK0CxrdU7JkseVzneDXL_gbRSr2M86HxnbAdxeVbSugv7wAcJ_7ulhgkKWxSsTt-G"
-        ),
-        Event(
-            "Cine", "Estreno de película",
-            "Cine local · 5 de agosto · $15",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuCqpkiFSPimk8qBx-HLQRh4Gn4J_GgzN2Bcc5F7nILLPmNNM5cAGHJpU3QDfDB6TerbNlqYxduY4unCbMoKQKhteOHkTaxjVN7OAALhIMaHyxdGeVbQ1C283IXxiCAYsEu3Z6SXtj2wVfepQjmJsrbWUa0zzXu-_AuzR5LNkMMgLGfhdMjdNVBZbawkD3sMzAbZPOmY9KsIxxRc_b-RUKBPK9xwavZYeIDsN7XEI0ms-2a-hVk9AapzDuNW0ZMF3tHVLiiVA9cyCmQM"
-        ),
-        Event(
-            "Arte", "Exposición de arte moderno",
-            "Museo de Arte Moderno · 12 de agosto · $20",
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuB9mmG5_HTyaKXQZR92Zo8pJ6ahVp8Ypa-IBi22loMLQi-CrGBQKcAx_k7kteyd_ytyvpt_2vPFMQ8t5lE1dMGOG8_gM2_LS-aCl8px-rL83fEGgAecI1tS8yxLBr01PQA-l7QRg6vGhqMrEVeVoX4mJbufEWLS_9QfreaPc7N7EWcSthTjSyCzKhscDRzKDQACGk2bXkzg2VMEm-8u1YYfGRtUEDgDuRUtLZ9eaBlmnE66MyYnzSOHz_AgOOT5Bt25c4Zlmf1NioNb"
-        )
-    )
+    // AHORA SE USA LA LISTA CENTRALIZADA:
+    val events = EventDataSource.events
 
     var search by remember { mutableStateOf("") }
 
@@ -144,20 +122,13 @@ fun ExploreScreen(navController: NavController) {
     }
 }
 
-data class Event(
-    val category: String,
-    val title: String,
-    val description: String,
-    val imageUrl: String
-)
-
 @Composable
 fun EventCard(event: Event, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // Suponemos que el 'title' es único y lo usamos como ID por ahora
-            .clickable { navController.navigate("detalle_evento/${event.title}") },
+            // usamos el id unico del objeto event
+            .clickable { navController.navigate("detalle_evento/${event.id}") },
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Column(modifier = Modifier.weight(2f)) {

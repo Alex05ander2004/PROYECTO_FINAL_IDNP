@@ -26,10 +26,22 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.ui.components.BottomNavigationBar
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
+import com.example.proyectofinal.data.EventDataSource
+import com.example.proyectofinal.data.Event
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventDetailScreen(navController: NavController) {
+fun EventDetailScreen(navController: NavController, eventId: String?) {
+    // ENCONTRAR EL EVENTO USANDO LA FUNCIÓN CENTRALIZADA:
+    val event = EventDataSource.getEventById(eventId)
+
+    // Manejo de error: Si el ID es nulo o no se encuentra el evento.
+    if (event == null) {
+        // Podrías mostrar un error, un cargando, o simplemente volver atrás
+        navController.popBackStack()
+        return
+    }
+
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -60,7 +72,7 @@ fun EventDetailScreen(navController: NavController) {
 
             // Imagen principal
             Image(
-                painter = rememberAsyncImagePainter("https://lh3.googleusercontent.com/aida-public/AB6AXuB9T-o1BKjYLjaz3VCL18tlGGm3xKZONJaNjj4ZpY-YQlCQ79ZjYrt0y34ZQ-ldkqPgcxPpvZ8St9NEOOsLBvR5IYLdTXLIapleIw61j-NgJkYwQiwJ6rvurLORVt2gdR_GAaKuSQevbhKx7bQP0tQmEtHTen1NiDKUf8b-jM5vkqkFdIZuCf2QsOkvV-CbY7w7SqcydY-wyVtvwgymJShFmeFqpk9rjWy95YIV2E7CxL3lGl3QNBd8DatsKbAEprrXIHYgw-ZUjz6_"),
+                painter = rememberAsyncImagePainter(event.imageUrl),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -74,14 +86,14 @@ fun EventDetailScreen(navController: NavController) {
 
             // Título y fecha
             Text(
-                text = "Indie Rock Festival",
+                text = event.title,
                 color = Color(0xFF111618),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
             Text(
-                text = "Saturday, July 20, 7:00 PM",
+                text = event.description,
                 color = Color(0xFF617C89),
                 fontSize = 14.sp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
@@ -101,7 +113,7 @@ fun EventDetailScreen(navController: NavController) {
 
             // Descripción
             Text(
-                text = "Experience the ultimate indie rock extravaganza at Central Park! Featuring electrifying performances by The Sonic Waves, Electric Echoes, and The Velvet Underground, this festival promises an unforgettable night of music, energy, and pure rock 'n' roll. Get ready to sing along to your favorite hits and discover new anthems that will stay with you long after the last note fades.",
+                text = event.text,
                 color = Color(0xFF111618),
                 fontSize = 15.sp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -117,7 +129,7 @@ fun EventDetailScreen(navController: NavController) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             Text(
-                text = "$45 - $120",
+                text = event.price,
                 color = Color(0xFF111618),
                 fontSize = 16.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
@@ -160,6 +172,6 @@ fun EventDetailScreen(navController: NavController) {
 fun EventDetailPreview() {
     ProyectoFinalTheme {
         val navController = rememberNavController()
-        EventDetailScreen(navController)
+        EventDetailScreen(navController, eventId = "indie_rock_6")
     }
 }

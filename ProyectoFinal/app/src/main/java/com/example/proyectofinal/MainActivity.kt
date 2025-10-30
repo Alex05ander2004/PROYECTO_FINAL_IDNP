@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
 
                         // Llamar a la pantalla de detalle, pasándole el ID
                         // NOTA: Tendrás que modificar EventDetailScreen para aceptar el ID.
-                        EventDetailScreen(navController = navController)
+                        EventDetailScreen(navController = navController, eventId = eventId)
                     }
 
                 }
