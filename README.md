@@ -13,4 +13,5 @@ Se crearon las interfaces de:
 ## Ejecucion de proyecto
 Para ejecutar el proyecto solo se debe clonar el proyecto desde nuestri Android studio
 una vez cargado el proyecto se podra ejecutar como cualquier otro
+
 nota: se recomienfa tener la ultima version de Android Studio para no tener conflicto con el gradle
