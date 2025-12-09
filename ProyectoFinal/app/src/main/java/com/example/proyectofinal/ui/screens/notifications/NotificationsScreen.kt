@@ -1,4 +1,4 @@
-package com.example.proyectofinal.ui.screens
+package com.example.proyectofinal.ui.screens.notifications
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

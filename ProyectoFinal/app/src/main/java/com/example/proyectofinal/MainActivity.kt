@@ -8,11 +8,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
 import androidx.navigation.compose.rememberNavController
-import com.example.proyectofinal.ui.screens.AgendaScreen
-import com.example.proyectofinal.ui.screens.NotificationsScreen
-import com.example.proyectofinal.ui.screens.ProfileScreen
-import com.example.proyectofinal.ui.screens.EventDetailScreen
-import com.example.proyectofinal.ui.screens.ExploreScreen
+import com.example.proyectofinal.ui.screens.agenda.AgendaScreen
+import com.example.proyectofinal.ui.screens.notifications.NotificationsScreen
+import com.example.proyectofinal.ui.screens.profile.ProfileScreen
+import com.example.proyectofinal.ui.screens.detail.EventDetailScreen
+import com.example.proyectofinal.ui.screens.explore.ExploreScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint

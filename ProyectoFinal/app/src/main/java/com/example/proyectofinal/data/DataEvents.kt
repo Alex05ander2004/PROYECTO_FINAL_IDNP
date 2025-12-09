@@ -9,7 +9,7 @@ data class Event(
     val text: String
 )
 
-// Objeto singleton para proporcionar los datos
+// Esta clase se eliminara cuando UI no necesite de ella
 object EventDataSource {
     val events = listOf(
         Event(
