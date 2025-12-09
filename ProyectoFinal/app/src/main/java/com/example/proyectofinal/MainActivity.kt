@@ -15,7 +15,9 @@ import com.example.proyectofinal.ui.screens.EventDetailScreen
 import com.example.proyectofinal.ui.screens.ExploreScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
