@@ -29,6 +29,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.domain.model.Event
 import com.example.proyectofinal.ui.components.BottomNavigationBar
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
+import com.example.proyectofinal.ui.screens.agenda.AgendaUiState
 
 // 1. COMPOSABLE STATEFUL (Con ViewModel)
 // Este es el que llama la Navegación (AppNavigation)
@@ -37,22 +38,22 @@ fun AgendaScreen(
     navController: NavController,
     viewModel: AgendaViewModel = hiltViewModel()
 ) {
-    val agendaEvents by viewModel.uiState.collectAsState()
+    // ⚠️ CAMBIO 1: Recolectar el objeto de estado completo (AgendaUiState)
+    val uiState by viewModel.uiState.collectAsState()
 
-    // Llamamos al componente "puro" pasándole solo los datos
+    // ⚠️ CAMBIO 2: Llamar a AgendaContent con el objeto uiState
     AgendaContent(
-        agendaEvents = agendaEvents,
+        uiState = uiState, // Le pasamos el objeto completo
         navController = navController,
         selectedTab = "agenda"
     )
 }
 
-// 2. COMPOSABLE STATELESS (Sin ViewModel)
-// Este recibe DATOS puros. La Preview usa este.
+// 2. COMPOSABLE STATELESS (La parte que dibuja, usa el objeto UiState)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgendaContent(
-    agendaEvents: List<Event>,
+    uiState: AgendaUiState, // ⚠️ CAMBIO 3: La función ahora espera AgendaUiState
     navController: NavController,
     selectedTab: String
 ) {
@@ -82,7 +83,12 @@ fun AgendaContent(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
 
-            if (agendaEvents.isEmpty()) {
+            // ⚠️ CAMBIO 4: Manejar el estado de carga y listas vacías
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.upcomingEvents.isEmpty() && uiState.pastEvents.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No tienes eventos agendados aún", color = Color.Gray)
                 }
@@ -92,9 +98,20 @@ fun AgendaContent(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item { SectionTitle("Mis Eventos") }
-                    items(agendaEvents) { event ->
-                        AgendaEventItem(event, navController)
+                    // SECCIÓN PRÓXIMOS
+                    if (uiState.upcomingEvents.isNotEmpty()) {
+                        item { SectionTitle("Próximos") }
+                        items(uiState.upcomingEvents) { event ->
+                            AgendaEventItem(event, navController)
+                        }
+                    }
+
+                    // SECCIÓN PASADOS
+                    if (uiState.pastEvents.isNotEmpty()) {
+                        item { SectionTitle("Pasados") }
+                        items(uiState.pastEvents) { event ->
+                            AgendaEventItem(event, navController)
+                        }
                     }
                 }
             }
@@ -156,31 +173,31 @@ fun AgendaScreenPreview() {
     ProyectoFinalTheme {
         val navController = rememberNavController()
 
-        // Creamos datos falsos SOLO para ver el diseño
-        val dummyEvents = listOf(
-            Event(
-                id = "1",
-                category = "Música",
-                title = "Concierto de Prueba",
-                description = "Un evento genial",
-                price = "$10",
-                imageUrl = "",
-                text = ""
-            ),
-            Event(
-                id = "2",
-                category = "Arte",
-                title = "Exposición Mock",
-                description = "Museo de arte",
-                price = "$5",
-                imageUrl = "",
-                text = ""
-            )
+        // --- 1. Definir una marca de tiempo para simular pasado/futuro ---
+        val now = System.currentTimeMillis()
+        val oneWeekMillis = 7 * 24 * 60 * 60 * 1000L
+
+        // --- 2. Crear datos falsos, incluyendo el campo dateTimestamp ---
+        val eventUpcoming = Event(
+            id = "1", title = "Concierto de Prueba (Próximo)", description = "En el futuro",
+            dateTimestamp = now + oneWeekMillis, category = "Música", price = "$10", imageUrl = "", text = ""
         )
 
-        // Llamamos a AgendaContent (NO a AgendaScreen)
+        val eventPast = Event(
+            id = "2", title = "Exposición Mock (Pasado)", description = "Hace una semana",
+            dateTimestamp = now - oneWeekMillis, category = "Arte", price = "$5", imageUrl = "", text = ""
+        )
+
+        // --- 3. Crear el objeto AgendaUiState para la Preview ---
+        val dummyUiState = AgendaUiState( // <-- Usamos el objeto importado (Solución 1)
+            upcomingEvents = listOf(eventUpcoming),
+            pastEvents = listOf(eventPast),
+            isLoading = false
+        )
+
+        // --- 4. Llamar a AgendaContent con el nuevo UiState ---
         AgendaContent(
-            agendaEvents = dummyEvents,
+            uiState = dummyUiState, // 🚨 CORRECCIÓN: Usamos el parámetro 'uiState'
             navController = navController,
             selectedTab = "agenda"
         )
