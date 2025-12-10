@@ -53,4 +53,10 @@ class EventRepositoryImpl @Inject constructor(
     override suspend fun deleteEvent(event: Event) {
         dao.delete(event.toEntity())
     }
+
+    override fun getAgendaEvents(): Flow<List<Event>> {
+        return dao.getAgendaEvents().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
 }

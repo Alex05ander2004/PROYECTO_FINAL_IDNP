@@ -13,7 +13,9 @@ fun EventEntity.toDomain(): Event {
         description = description,
         price = price,
         imageUrl = imageUrl,
-        text = text
+        text = text,
+        isUserCreated = isUserCreated,
+        isInAgenda = isInAgenda
     )
 }
 
@@ -27,7 +29,9 @@ fun Event.toEntity(): EventEntity {
         description = description,
         price = price,
         imageUrl = imageUrl,
-        text = text
+        text = text,
+        isUserCreated = isUserCreated,
+        isInAgenda = isInAgenda
     )
 }
 
