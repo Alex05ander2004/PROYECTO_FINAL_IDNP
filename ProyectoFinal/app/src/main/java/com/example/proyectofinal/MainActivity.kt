@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
 import androidx.navigation.compose.rememberNavController
 import com.example.proyectofinal.ui.screens.agenda.AgendaScreen
+import com.example.proyectofinal.ui.screens.create.CreateEventScreen
 import com.example.proyectofinal.ui.screens.notifications.NotificationsScreen
 import com.example.proyectofinal.ui.screens.profile.ProfileScreen
 import com.example.proyectofinal.ui.screens.detail.EventDetailScreen
@@ -24,13 +25,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ProyectoFinalTheme {
-                // 1. Crear el NavController
                 val navController = rememberNavController()
 
-                // 2. Definir el NavHost con todas las rutas
                 NavHost(
                     navController = navController,
-                    // Establecer la pantalla que se mostrará al inicio
                     startDestination = "explorar"
                 ) {
                     // Rutas principales (las de BottomNavigationBar)
@@ -38,7 +36,6 @@ class MainActivity : ComponentActivity() {
                         ExploreScreen(navController = navController)
                     }
                     composable("agenda") {
-                        // Asegúrate de crear el composable AgendaScreen si aún no lo has hecho
                         AgendaScreen(navController = navController)
                     }
                     composable("notificaciones") {
@@ -53,14 +50,12 @@ class MainActivity : ComponentActivity() {
                         route = "detalle_evento/{eventId}",
                         arguments = listOf(navArgument("eventId") { type = NavType.StringType })
                     ) { backStackEntry ->
-                        // Obtener el ID del argumento
                         val eventId = backStackEntry.arguments?.getString("eventId")
-
-                        // Llamar a la pantalla de detalle, pasándole el ID
-                        // NOTA: Tendrás que modificar EventDetailScreen para aceptar el ID.
                         EventDetailScreen(navController = navController, eventId = eventId)
                     }
-
+                    composable("create_event") { // <-- RUTA AÑADIDA
+                        CreateEventScreen(navController = navController)
+                    }
                 }
             }
         }

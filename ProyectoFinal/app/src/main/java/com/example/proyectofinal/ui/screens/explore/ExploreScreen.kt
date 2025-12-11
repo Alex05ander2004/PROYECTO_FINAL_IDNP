@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,21 +33,17 @@ import com.example.proyectofinal.ui.components.BottomNavigationBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(navController: NavController) {
-    val categories = listOf("Todos") + EventDataSource.events.map { it.category }.distinct() // Añadir "Todos"
-    val allEvents = EventDataSource.events // Usar la fuente de datos centralizada
+    val categories = listOf("Todos") + EventDataSource.events.map { it.category }.distinct()
+    val allEvents = EventDataSource.events
 
-    // 1. Estados de control
     var search by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Todos") }
 
-    // 2. Lógica de Filtrado (Calculated State)
     val filteredEvents = remember(search, selectedCategory) {
         allEvents
-            // Filtrado por Categoría
             .filter { event ->
                 if (selectedCategory == "Todos") true else event.category == selectedCategory
             }
-            // Filtrado por Búsqueda (en título o descripción)
             .filter { event ->
                 if (search.isBlank()) true else {
                     event.title.contains(search, ignoreCase = true) ||
@@ -56,7 +53,15 @@ fun ExploreScreen(navController: NavController) {
     }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController, selected = "explorar") }
+        bottomBar = { BottomNavigationBar(navController = navController, selected = "explorar") },
+        floatingActionButton = { // <-- BOTÓN AÑADIDO
+            FloatingActionButton(
+                onClick = { navController.navigate("create_event") },
+                containerColor = Color(0xFF13A4EC)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Crear Evento", tint = Color.White)
+            }
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -76,10 +81,9 @@ fun ExploreScreen(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
 
-            // Barra de Búsqueda (ya configurada, pero ahora afecta filteredEvents)
             OutlinedTextField(
                 value = search,
-                onValueChange = { search = it }, // Actualiza el estado 'search'
+                onValueChange = { search = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -97,7 +101,6 @@ fun ExploreScreen(navController: NavController) {
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Categorías (LazyRow)
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
@@ -107,14 +110,13 @@ fun ExploreScreen(navController: NavController) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            // Acción de clic para cambiar la categoría seleccionada
                             .clickable { selectedCategory = category }
-                            .background(if (isSelected) Color(0xFF13A4EC) else Color(0xFFF0F3F4)) // Color al seleccionar
+                            .background(if (isSelected) Color(0xFF13A4EC) else Color(0xFFF0F3F4))
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Text(
                             category,
-                            color = if (isSelected) Color.White else Color(0xFF111618), // Color del texto
+                            color = if (isSelected) Color.White else Color(0xFF111618),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -124,30 +126,24 @@ fun ExploreScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Lista de Eventos Filtrados
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredEvents) { event -> // Usar la lista filtrada
-                    EventCard(event, navController) // Pasar NavController
+                items(filteredEvents) { event ->
+                    EventCard(event, navController)
                 }
             }
         }
     }
 }
 
-// ⚠️ Mueve la data class Event y EventCard fuera del Composable para evitar errores de recompilación
-// o asegúrate de que EventCard esté definida como en la respuesta anterior para aceptar navController y clickable.
-
-// Si la definición de EventCard está aquí (como en tu código original), modifícala:
 @Composable
 fun EventCard(event: Event, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // Implementar la navegación al detalle
             .clickable { navController.navigate("detalle_evento/${event.id}") },
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
