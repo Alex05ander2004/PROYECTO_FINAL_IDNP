@@ -27,26 +27,21 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.data.Event
 import com.example.proyectofinal.data.EventDataSource
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
-import com.example.proyectofinal.ui.components.BottomNavigationBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(navController: NavController) {
-    val categories = listOf("Todos") + EventDataSource.events.map { it.category }.distinct() // Añadir "Todos"
-    val allEvents = EventDataSource.events // Usar la fuente de datos centralizada
+    val categories = listOf("Todos") + EventDataSource.events.map { it.category }.distinct()
+    val allEvents = EventDataSource.events
 
-    // 1. Estados de control
     var search by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Todos") }
 
-    // 2. Lógica de Filtrado (Calculated State)
     val filteredEvents = remember(search, selectedCategory) {
         allEvents
-            // Filtrado por Categoría
             .filter { event ->
                 if (selectedCategory == "Todos") true else event.category == selectedCategory
             }
-            // Filtrado por Búsqueda (en título o descripción)
             .filter { event ->
                 if (search.isBlank()) true else {
                     event.title.contains(search, ignoreCase = true) ||
@@ -55,108 +50,96 @@ fun ExploreScreen(navController: NavController) {
             }
     }
 
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController, selected = "explorar") }
-    ) { innerPadding ->
-        Column(
+    // El Scaffold y BottomBar han sido eliminados. La estructura principal está en AppNavigation.kt
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            // El color de fondo ahora se hereda del tema global
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        CenterAlignedTopAppBar(
+            title = {
+                Text(
+                    text = "Eventos",
+                    color = MaterialTheme.colorScheme.onSurface, // Usar color del tema
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface) // Usar color del tema
+        )
+
+        OutlinedTextField(
+            value = search,
+            onValueChange = { search = it },
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(Color.White)
+                .fillMaxWidth()
+                .padding(16.dp)
+                .height(56.dp),
+            leadingIcon = {
+                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            },
+            placeholder = { Text("Buscar eventos", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
-            CenterAlignedTopAppBar(
-                title = {
+            items(categories) { category ->
+                val isSelected = category == selectedCategory
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { selectedCategory = category }
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
                     Text(
-                        text = "Eventos",
-                        color = Color(0xFF111618),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 25.sp
+                        category,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-
-            // Barra de Búsqueda (ya configurada, pero ahora afecta filteredEvents)
-            OutlinedTextField(
-                value = search,
-                onValueChange = { search = it }, // Actualiza el estado 'search'
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(56.dp),
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF617C89))
-                },
-                placeholder = { Text("Buscar eventos", color = Color(0xFF617C89)) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF0F3F4),
-                    unfocusedContainerColor = Color(0xFFF0F3F4),
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent
-                ),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // Categorías (LazyRow)
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                items(categories) { category ->
-                    val isSelected = category == selectedCategory
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            // Acción de clic para cambiar la categoría seleccionada
-                            .clickable { selectedCategory = category }
-                            .background(if (isSelected) Color(0xFF13A4EC) else Color(0xFFF0F3F4)) // Color al seleccionar
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            category,
-                            color = if (isSelected) Color.White else Color(0xFF111618), // Color del texto
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            // Lista de Eventos Filtrados
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(filteredEvents) { event -> // Usar la lista filtrada
-                    EventCard(event, navController) // Pasar NavController
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(filteredEvents) { event ->
+                EventCard(event, navController)
             }
         }
     }
 }
 
-// ⚠️ Mueve la data class Event y EventCard fuera del Composable para evitar errores de recompilación
-// o asegúrate de que EventCard esté definida como en la respuesta anterior para aceptar navController y clickable.
-
-// Si la definición de EventCard está aquí (como en tu código original), modifícala:
 @Composable
 fun EventCard(event: Event, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // Implementar la navegación al detalle
             .clickable { navController.navigate("detalle_evento/${event.id}") },
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Column(modifier = Modifier.weight(2f)) {
-            Text(event.category, color = Color(0xFF617C89), fontSize = 14.sp)
-            Text(event.title, color = Color(0xFF111618), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(event.category, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+            Text(event.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text(
                 event.description,
-                color = Color(0xFF617C89),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -177,7 +160,8 @@ fun EventCard(event: Event, navController: NavController) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ExploreScreenPreview() {
-    ProyectoFinalTheme {
+    // La preview ahora puede probar ambos temas
+    ProyectoFinalTheme(darkTheme = false) {
         val navController = rememberNavController()
         ExploreScreen(navController)
     }
