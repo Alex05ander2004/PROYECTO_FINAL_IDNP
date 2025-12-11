@@ -167,7 +167,7 @@ fun EventDetailScreen(navController: NavController, eventId: String?) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun EventDetailPreview() {
-    ProyectoFinalTheme {
+    ProyectoFinalTheme(darkTheme = false) {
         val navController = rememberNavController()
         EventDetailScreen(navController, eventId = "indie_rock_6")
     }
