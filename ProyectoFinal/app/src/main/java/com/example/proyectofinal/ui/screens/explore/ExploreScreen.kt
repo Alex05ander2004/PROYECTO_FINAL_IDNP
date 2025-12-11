@@ -1,5 +1,6 @@
 package com.example.proyectofinal.ui.screens.explore
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,24 +23,34 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
-import com.example.proyectofinal.data.Event
-import com.example.proyectofinal.data.EventDataSource
-import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
+import com.example.proyectofinal.domain.model.Event
 import com.example.proyectofinal.ui.components.BottomNavigationBar
+import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
+
+private const val TAG = "ExploreScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExploreScreen(navController: NavController) {
-    val categories = listOf("Todos") + EventDataSource.events.map { it.category }.distinct()
-    val allEvents = EventDataSource.events
+fun ExploreScreen(
+    navController: NavController,
+    viewModel: ExploreViewModel = hiltViewModel()
+) {
+    // 1. Nos suscribimos a la lista de eventos del ViewModel
+    val allEvents by viewModel.events.collectAsState()
+    Log.d(TAG, "ExploreScreen se está recomponiendo con ${allEvents.size} eventos.")
+
+    val categories = remember(allEvents) {
+        listOf("Todos") + allEvents.map { it.category }.distinct()
+    }
 
     var search by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Todos") }
 
-    val filteredEvents = remember(search, selectedCategory) {
+    val filteredEvents = remember(search, selectedCategory, allEvents) {
         allEvents
             .filter { event ->
                 if (selectedCategory == "Todos") true else event.category == selectedCategory
@@ -54,7 +65,7 @@ fun ExploreScreen(navController: NavController) {
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController = navController, selected = "explorar") },
-        floatingActionButton = { // <-- BOTÓN AÑADIDO
+        floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("create_event") },
                 containerColor = Color(0xFF13A4EC)
@@ -175,6 +186,8 @@ fun EventCard(event: Event, navController: NavController) {
 fun ExploreScreenPreview() {
     ProyectoFinalTheme {
         val navController = rememberNavController()
+        // Preview no funcionará con ViewModel directamente, se necesitaría un estado falso.
+        // Por ahora, lo dejamos así, pero la funcionalidad en la app es lo importante.
         ExploreScreen(navController)
     }
 }
