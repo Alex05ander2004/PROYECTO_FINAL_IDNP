@@ -1,17 +1,74 @@
-# PROYECTO_FINAL_IDNP
-## Resumen
-Aplicacion Android para gestionar los eventos de interes
+# Proyecto Final - Aplicación de Eventos
 
-## Interfaces implementadas
-Se crearon las interfaces de:
-- AgendaScreen: ventana que muestra los eventos a los que asistio o asistira el usuario.
-- EventDetailScreen: ventana que muestra los detalles de un evento seleccionado.
-- ExploreScreen: ventana que muestra todos los eventos o alguno en especifico.
-- NotoficationsScreen: Venta que muestra un historial de notificaciones de los eventos anteriores y los posteriores.
-- ProfileScreen: Ventana con informacion del perfil del ususario.
+## Resumen Ejecutivo
 
-## Ejecucion de proyecto
-Para ejecutar el proyecto solo se debe clonar el proyecto desde nuestri Android studio
-una vez cargado el proyecto se podra ejecutar como cualquier otro
+Este proyecto es una aplicación Android nativa desarrollada con Kotlin y Jetpack Compose, diseñada para la exploración y gestión de eventos. La arquitectura sigue los principios de **Clean Architecture** y está orientada a features (feature-oriented), utilizando un patrón **MVVM** para la capa de UI.
 
-nota: se recomienfa tener la ultima version de Android Studio para no tener conflicto con el gradle
+El trabajo realizado consistió en una refactorización significativa para mejorar la escalabilidad, mantenibilidad y experiencia de usuario. Los cambios clave incluyen:
+
+1.  **Implementación de un Módulo de Ajustes:** Se añadió una pantalla de `SettingsScreen` completa, accesible desde el perfil del usuario.
+2.  **Tema Dinámico (Modo Claro/Oscuro):** Se implementó un sistema de tema dinámico que afecta a toda la aplicación. La preferencia del usuario se guarda de forma persistente utilizando **Jetpack DataStore**, asegurando que el tema seleccionado se aplique al iniciar la app.
+3.  **Centralización de la Navegación:** Se refactorizó la lógica de navegación, centralizándola en un componente `AppNavigation` para evitar duplicidad de menús y asegurar una estructura de UI consistente y controlada.
+4.  **Modernización de la UI:** Se limpiaron y actualizaron todas las pantallas principales (`Explore`, `Agenda`, `Notifications`, `Profile`) para que sean completamente compatibles con el tema dinámico, eliminando colores fijos y estructuras de `Scaffold` duplicadas.
+
+**Tecnologías Principales:**
+- **UI:** Jetpack Compose & Material 3
+- **Arquitectura:** MVVM, Clean Architecture, Feature-Oriented
+- **Inyección de Dependencias:** Hilt
+- **Navegación:** Jetpack Navigation for Compose
+- **Persistencia:** Jetpack DataStore (para preferencias) y Room (para datos de la app)
+- **Asincronía:** Kotlin Coroutines & Flow
+- **Carga de Imágenes:** Coil
+
+---
+
+## Interfaces Implementadas
+
+| Interfaz | Propósito | Comportamiento Principal |
+| :--- | :--- | :--- |
+| **`ExploreScreen`** | Pantalla principal de la aplicación. | Muestra una lista de eventos disponibles. Permite al usuario buscar por texto y filtrar por categorías. |
+| **`AgendaScreen`** | Agenda personal del usuario. | Muestra los eventos a los que el usuario se ha inscrito o agendado. |
+| **`NotificationsScreen`** | Centro de notificaciones. | Presenta una lista de notificaciones relevantes para el usuario. |
+| **`ProfileScreen`** | Pantalla de perfil de usuario. | Muestra información básica del perfil y contiene el punto de acceso para navegar a la pantalla de Ajustes. |
+| **`SettingsScreen`** | Centro de configuración de la app. | Permite al usuario personalizar la aplicación. Su funcionalidad clave es el **interruptor de "Modo oscuro"** que cambia el tema de toda la app en tiempo real. |
+| **`AppNavigation`** | Orquestador de navegación. | Contiene el `Scaffold` principal, la `BottomNavigationBar` y el `NavHost`. Gestiona la transición entre las pantallas principales y secundarias. |
+
+---
+
+## Instrucciones de Ejecución y Pruebas
+
+Sigue estos pasos para compilar y ejecutar la aplicación en tu entorno de desarrollo.
+
+### Requisitos
+
+- Android Studio Iguana | 2023.2.1 o superior.
+- Emulador de Android o dispositivo físico con API 26+.
+
+### Pasos para Ejecutar
+
+1.  **Clonar el Repositorio** (si aplica) o abrir la carpeta del proyecto.
+2.  **Abrir en Android Studio**: Selecciona la carpeta raíz del proyecto.
+3.  **Sincronizar Gradle**: Espera a que Android Studio descargue todas las dependencias y sincronice el proyecto.
+4.  **Ejecutar la Aplicación**: Selecciona la configuración de ejecución `app` y presiona "Run" (▶️), eligiendo un emulador o dispositivo conectado.
+
+### Cómo Probar la Funcionalidad Clave
+
+Para validar la correcta implementación de las características principales:
+
+1.  **Navegación Principal:**
+    -   Inicia la aplicación.
+    -   Navega entre las diferentes pestañas del menú inferior (`Explorar`, `Mi Agenda`, `Notificaciones`, `Perfil`) y verifica que cada pantalla se muestra correctamente.
+
+2.  **Prueba del Tema Dinámico (Modo Oscuro):**
+    -   Ve a la pestaña **Perfil**.
+    -   Toca en la opción **"Configuración"**.
+    -   Activa el interruptor **"Modo oscuro"**.
+    -   **Verificación:**
+        -   La pantalla de `Settings` debe cambiar a modo oscuro instantáneamente.
+        -   Navega hacia atrás y a otras pantallas. **Toda la aplicación**, incluyendo la barra de navegación inferior, `ExploreScreen`, etc., debe estar en modo oscuro.
+        -   Desactiva el interruptor y verifica que toda la app vuelva al modo claro.
+
+3.  **Prueba de Persistencia del Tema:**
+    -   Con el modo oscuro activado, cierra completamente la aplicación desde el menú de recientes.
+    -   Vuelve a abrir la aplicación.
+    -   **Verificación:** La aplicación debe iniciarse directamente en modo oscuro, demostrando que la preferencia se guardó correctamente en DataStore.
