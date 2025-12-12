@@ -133,10 +133,18 @@ fun CreateEventScreen(
                 // Campo Precio
                 OutlinedTextField(
                     value = viewModel.price,
-                    onValueChange = { viewModel.price = it },
+                    onValueChange = { input ->
+                        // 👇 VALIDACIÓN: Solo aceptamos dígitos
+                        if (input.all { it.isDigit() }) {
+                            viewModel.price = input
+                        }
+                    },
                     label = { Text("Precio") },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    // 👇 TECLADO NUMÉRICO:
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
                 )
             }
 

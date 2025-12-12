@@ -2,34 +2,44 @@ package com.example.proyectofinal.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.proyectofinal.data.datastore.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Definición del estado (Asegúrate de que esté aquí o importada)
 data class SettingsUiState(
     val isDarkTheme: Boolean = false
 )
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
+class SettingsViewModel @Inject constructor(
+    // 👇 INYECTAMOS EL REPOSITORIO QUE GUARDA EN DISCO
+    private val userPreferencesRepository: UserPreferencesRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    // 👇 AQUÍ ESTABA EL ERROR:
-    // Antes se llamaba 'toggleTheme', ahora lo renombramos a 'onThemeChange'
-    // para que coincida con tu SettingsScreen.
+    init {
+        // Al iniciar, nos suscribimos a los cambios de la base de datos (DataStore)
+        viewModelScope.launch {
+            userPreferencesRepository.isDarkTheme.collectLatest { isDark ->
+                _uiState.value = SettingsUiState(isDarkTheme = isDark)
+            }
+        }
+    }
+
+    // Cuando el usuario toca el switch...
     fun onThemeChange(isDark: Boolean) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isDarkTheme = isDark) }
-
-            // TODO: Aquí deberíamos guardar el valor en DataStore para que
-            // el tema se recuerde al cerrar la app.
+            // ... guardamos en DataStore.
+            // Esto disparará automáticamente el 'collectLatest' de arriba
+            // y actualizará tanto esta pantalla como el MainActivity.
+            userPreferencesRepository.saveTheme(isDark)
         }
     }
 }

@@ -172,7 +172,7 @@ fun EventDetailContent(
                 label = { Text(event.category) }
             )
             Text(
-                text = event.price,
+                text = "$"+event.price,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold
