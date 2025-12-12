@@ -29,7 +29,7 @@ El trabajo realizado consistió en una refactorización significativa para mejor
 | **`ExploreScreen`** | Pantalla principal de la aplicación. | Muestra una lista de eventos disponibles. Permite al usuario buscar por texto y filtrar por categorías. |
 | **`AgendaScreen`** | Agenda personal del usuario. | Muestra los eventos a los que el usuario se ha inscrito o agendado. |
 | **`NotificationsScreen`** | Centro de notificaciones. | Presenta una lista de notificaciones relevantes para el usuario. |
-| **`ProfileScreen`** | Pantalla de perfil de usuario. | Muestra información básica del perfil y contiene el punto de acceso para navegar a la pantalla de Ajustes. |
+| **`CreateScreen`** | Pantalla de creacion de un nuevo evento. | Muestra un formulario con los campos necesarios para crear el nuevo evento. |
 | **`SettingsScreen`** | Centro de configuración de la app. | Permite al usuario personalizar la aplicación. Su funcionalidad clave es el **interruptor de "Modo oscuro"** que cambia el tema de toda la app en tiempo real. |
 | **`AppNavigation`** | Orquestador de navegación. | Contiene el `Scaffold` principal, la `BottomNavigationBar` y el `NavHost`. Gestiona la transición entre las pantallas principales y secundarias. |
 
@@ -50,6 +50,7 @@ Sigue estos pasos para compilar y ejecutar la aplicación en tu entorno de desar
 2.  **Abrir en Android Studio**: Selecciona la carpeta raíz del proyecto.
 3.  **Sincronizar Gradle**: Espera a que Android Studio descargue todas las dependencias y sincronice el proyecto.
 4.  **Ejecutar la Aplicación**: Selecciona la configuración de ejecución `app` y presiona "Run" (▶️), eligiendo un emulador o dispositivo conectado.
+5.  **Instalar el apk**: Tambien se puede instalar el archivo .apk que esta al lado de proyecto final para su uso.
 
 ### Cómo Probar la Funcionalidad Clave
 
