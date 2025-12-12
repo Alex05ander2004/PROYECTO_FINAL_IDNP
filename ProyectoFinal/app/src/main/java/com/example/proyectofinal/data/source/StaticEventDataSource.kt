@@ -1,14 +1,31 @@
 package com.example.proyectofinal.data.source
 
+import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import com.example.proyectofinal.domain.model.Event
-import javax.inject.Inject
 
-class StaticEventDataSource @Inject constructor() {
+private const val TAG = "StaticEventDataSource"
 
-    private fun getFutureTimestamp(days: Int): Long {
-        return System.currentTimeMillis() + days * 24 * 60 * 60 * 1000L
+object StaticEventDataSource {
+
+    // Usamos una lista de estado observable de Compose
+    private val _events = mutableStateListOf<Event>()
+
+    val events: List<Event>
+        get() = _events
+
+    init {
+        Log.d(TAG, "Inicializando y cargando eventos base.")
+        _events.addAll(getInitialEvents())
     }
-    fun getBaseEvents(): List<Event> {
+
+    fun addEvent(event: Event) {
+        Log.d(TAG, "addEvent llamado con: $event")
+        _events.add(0, event)
+        Log.d(TAG, "Evento añadido. Nuevo tamaño de la lista: ${_events.size}")
+    }
+
+    private fun getInitialEvents(): List<Event> {
         return listOf(
             Event(
                 id = "jazz_festival_1",
