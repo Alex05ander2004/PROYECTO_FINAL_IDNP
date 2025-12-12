@@ -12,7 +12,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class) // Esto vivirá tanto como la App
+@InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
     // 1. Enseñar a crear la Base de Datos

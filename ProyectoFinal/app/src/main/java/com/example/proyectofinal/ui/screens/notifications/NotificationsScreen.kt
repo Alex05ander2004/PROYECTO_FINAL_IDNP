@@ -6,19 +6,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.proyectofinal.domain.model.NotificationSettings
 import com.example.proyectofinal.ui.components.SectionTitle
-import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
 
 // 1. COMPOSABLE STATEFUL (Con ViewModel)
 @Composable
@@ -35,11 +34,13 @@ fun NotificationsScreen(
         history = history,
         isLoading = isLoading,
         onToggleNotifications = viewModel::toggleNotifications,
-        onClickReminderRange = { /* Navegación o diálogo */ }
+        onClickReminderRange = { /* Futura navegación o diálogo */ },
+        // 👇 CONEXIÓN: Conectamos el botón con la función del ViewModel
+        onTestNotification = viewModel::sendTestNotification
     )
 }
 
-// 2. COMPOSABLE STATELESS (Limpio y corregido)
+// 2. COMPOSABLE STATELESS (Limpio y con botón de prueba)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsContent(
@@ -47,7 +48,8 @@ fun NotificationsContent(
     history: NotificationHistory?,
     isLoading: Boolean,
     onToggleNotifications: (Boolean) -> Unit,
-    onClickReminderRange: () -> Unit
+    onClickReminderRange: () -> Unit,
+    onTestNotification: () -> Unit // 👇 Nuevo parámetro para la prueba
 ) {
     val reminderRangeLabel = when (settings.reminderRangeMinutes) {
         15 -> "15 minutos antes"
@@ -56,22 +58,17 @@ fun NotificationsContent(
         else -> "${settings.reminderRangeMinutes} minutos antes"
     }
 
-    // --- ESTRUCTURA LIMPIA ---
-    // Se elimina el Scaffold, ya que AppNavigation.kt lo gestiona.
-    // Se elimina el fondo blanco para que el tema dinámico funcione.
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // La TopAppBar se mantiene, pero usando colores del tema.
         TopAppBar(
             title = {
                 Text(
-                    text = "Notificaciones",
+                    text = "Avisos", // Nombre corto para la barra
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
                 )
             },
-            // Se elimina el ícono de navegación "Atrás", ya que es una pantalla principal.
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surface,
                 titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -87,6 +84,24 @@ fun NotificationsContent(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
+                // --- BOTÓN DE PRUEBA (SOLO PARA DESARROLLO) ---
+                item {
+                    Button(
+                        onClick = onTestNotification,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Icon(Icons.Default.Notifications, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Probar Notificación Ahora")
+                    }
+                }
+
+                // --- HISTORIAL DE PRÓXIMOS ---
                 history?.upcoming?.let {
                     if (it.isNotEmpty()) {
                         item { SectionTitle("Próximos Recordatorios") }
@@ -94,19 +109,21 @@ fun NotificationsContent(
                     }
                 }
 
+                // --- HISTORIAL DE PASADOS ---
                 history?.past?.let {
                     if (it.isNotEmpty()) {
-                        item { SectionTitle("Eventos Pasados") }
+                        item { SectionTitle("Historial Reciente") }
                         items(it) { item -> NotificationRow(item) }
                     }
                 }
 
+                // --- CONFIGURACIÓN ---
                 item { SectionTitle("Configuración") }
 
                 item {
                     NotificationToggleRow(
                         title = "Notificaciones generales",
-                        subtitle = "Activar/desactivar notificaciones",
+                        subtitle = "Activar/desactivar alertas",
                         checked = settings.isEnabled,
                         onCheckedChange = onToggleNotifications
                     )
@@ -124,6 +141,7 @@ fun NotificationsContent(
     }
 }
 
+// --- COMPONENTES AUXILIARES ---
 
 @Composable
 fun NotificationRow(notification: NotificationItem) {
@@ -132,17 +150,19 @@ fun NotificationRow(notification: NotificationItem) {
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .fillMaxWidth()
     ) {
-        Text(
-            text = notification.title,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = notification.subtitle,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 14.sp
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = notification.title,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 16.sp
+            )
+            Text(
+                text = notification.subtitle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 14.sp
+            )
+        }
     }
 }
 
@@ -205,34 +225,6 @@ fun NotificationOptionRow(title: String, subtitle: String, onClick: () -> Unit) 
             Icons.Default.KeyboardArrowRight,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-// 3. Preview Corregido
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun NotificationsScreenPreview() {
-    ProyectoFinalTheme(darkTheme = false) {
-        val dummyUpcoming = listOf(
-            NotificationItem(title = "Recordatorio: Concierto Test", subtitle = "En 30 minutos"),
-            NotificationItem(title = "Recordatorio: Maratón", subtitle = "Mañana")
-        )
-        val dummyPast = listOf(
-            NotificationItem(title = "Finalizado: Clase de Yoga", subtitle = "Hace 2 días"),
-            NotificationItem(title = "Finalizado: Reunión", subtitle = "Ayer")
-        )
-        val dummyHistory = NotificationHistory(
-            upcoming = dummyUpcoming,
-            past = dummyPast
-        )
-        val dummySettings = NotificationSettings(isEnabled = true, reminderRangeMinutes = 30)
-
-        NotificationsContent(
-            settings = dummySettings,
-            history = dummyHistory,
-            isLoading = false,
-            onToggleNotifications = {},
-            onClickReminderRange = {}
         )
     }
 }

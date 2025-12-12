@@ -63,7 +63,6 @@ fun EventDetailScreen(
                     event = event,
                     modifier = Modifier.padding(innerPadding),
                     onToggleAgenda = { viewModel.toggleAgendaStatus() },
-                    // 👇 Pasamos el navController aquí
                     navController = navController
                 )
             }

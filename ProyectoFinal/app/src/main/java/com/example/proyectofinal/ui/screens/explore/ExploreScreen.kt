@@ -100,7 +100,7 @@ fun ExploreScreen(
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
                 },
-                // 👇 NUEVO: Botón 'X' para borrar texto
+
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
                         IconButton(onClick = { searchText = "" }) {
@@ -108,7 +108,7 @@ fun ExploreScreen(
                         }
                     }
                 },
-                // 👇 NUEVO: Configuración del teclado (Botón 'Buscar' y cerrar teclado)
+
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(
                     onSearch = { focusManager.clearFocus() }
