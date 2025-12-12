@@ -1,3 +1,4 @@
+// ui/screens/explore/ExploreViewModel.kt
 package com.example.proyectofinal.ui.screens.explore
 
 import androidx.lifecycle.ViewModel

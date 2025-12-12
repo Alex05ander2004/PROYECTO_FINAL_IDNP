@@ -24,4 +24,8 @@ interface EventDao {
 
     @Delete
     suspend fun delete(event: EventEntity)
+
+    // Trae eventos si: Lo creé yo (isUserCreated) O Lo guardé (isInAgenda)
+    @Query("SELECT * FROM events WHERE isUserCreated = 1 OR isInAgenda = 1")
+    fun getAgendaEvents(): Flow<List<EventEntity>>
 }

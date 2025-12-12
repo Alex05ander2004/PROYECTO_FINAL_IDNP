@@ -9,4 +9,5 @@ interface EventRepository {
     suspend fun createEvent(event: Event)
     suspend fun updateEvent(event: Event)
     suspend fun deleteEvent(event: Event)
+    fun getAgendaEvents(): Flow<List<Event>>
 }

@@ -9,7 +9,10 @@ data class EventEntity(
     val category: String,
     val title: String,
     val description: String,
+    val dateTimestamp: Long,
     val price: String,
     val imageUrl: String,
-    val text: String
+    val text: String,
+    val isUserCreated: Boolean,
+    val isInAgenda: Boolean
 )
