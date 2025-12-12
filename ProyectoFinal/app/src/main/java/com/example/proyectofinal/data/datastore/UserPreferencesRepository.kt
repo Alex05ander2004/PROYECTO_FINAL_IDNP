@@ -12,33 +12,28 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// Declara el DataStore a nivel de top-level, asociado al contexto de la aplicación.
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
+// 1. Definimos la extensión para crear la base de datos pequeña (DataStore)
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 @Singleton
-class UserPreferencesRepository @Inject constructor(@ApplicationContext private val context: Context) {
+class UserPreferencesRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
-    // Clave para almacenar la preferencia del tema oscuro.
-    private companion object {
-        val IS_DARK_THEME = booleanPreferencesKey("is_dark_theme")
-    }
+    // Definimos la clave para el Tema Oscuro
+    private val THEME_KEY = booleanPreferencesKey("is_dark_theme")
 
-    /**
-     * Flujo que emite el estado actual del tema oscuro.
-     * Si no hay ningún valor guardado, por defecto será `false` (tema claro).
-     */
+    // 2. Función para LEER el dato (devuelve un Flow)
     val isDarkTheme: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
-            preferences[IS_DARK_THEME] ?: false
+            // Si no existe valor, devolvemos false (Tema claro por defecto)
+            preferences[THEME_KEY] ?: false
         }
 
-    /**
-     * Guarda el estado del tema oscuro en DataStore.
-     * @param isDarkTheme `true` para tema oscuro, `false` para tema claro.
-     */
-    suspend fun saveThemePreference(isDarkTheme: Boolean) {
+    // 3. Función para GUARDAR el dato
+    suspend fun saveTheme(isDark: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[IS_DARK_THEME] = isDarkTheme
+            preferences[THEME_KEY] = isDark
         }
     }
 }

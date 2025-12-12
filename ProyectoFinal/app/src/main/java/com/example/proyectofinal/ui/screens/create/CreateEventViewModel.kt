@@ -12,6 +12,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,15 +27,20 @@ class CreateEventViewModel @Inject constructor(
     var imageUrl by mutableStateOf("")
     var text by mutableStateOf("")
 
-    // 👇 1. AGREGADO: Variable de estado para la fecha.
-    // Por defecto tiene la hora actual del sistema.
-    var dateTimestamp by mutableStateOf(System.currentTimeMillis())
+    // 👇 NUEVO CAMPO: Guardamos el input del usuario (ej: "5")
+    var daysUntilEvent by mutableStateOf("")
 
     private val _navigationEvent = Channel<Unit>()
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
     fun onSaveEvent() {
         viewModelScope.launch {
+            // 1. Convertimos el texto "5" a número entero (o 0 si está vacío)
+            val days = daysUntilEvent.toIntOrNull() ?: 0
+
+            // 2. Calculamos la fecha futura: Ahora + (Días * milisegundos en un día)
+            val futureTimestamp = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(days.toLong())
+
             val newEvent = Event(
                 id = UUID.randomUUID().toString(),
                 title = title,
@@ -44,18 +50,14 @@ class CreateEventViewModel @Inject constructor(
                 imageUrl = imageUrl,
                 text = text,
 
-                // 👇 2. AGREGADO: Asignamos la fecha
-                dateTimestamp = dateTimestamp,
+                // 👇 Usamos la fecha calculada
+                dateTimestamp = futureTimestamp,
 
-                // 👇 3. IMPORTANTE: Marcamos que este evento lo creó el usuario
                 isUserCreated = true,
-
-                // Por defecto no está en la agenda (o true, si prefieres que se auto-agende)
                 isInAgenda = false
             )
 
             repository.createEvent(newEvent)
-
             _navigationEvent.send(Unit)
         }
     }

@@ -1,4 +1,4 @@
-package com.example.proyectofinal.ui.screens.create
+package com.example.proyectofinal.ui.screens.edit
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.* // Importante para la lógica del dropdown
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -18,31 +18,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-// Borramos el import de BottomNavigationBar porque ya no lo usamos aquí
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateEventScreen(
+fun EditEventScreen(
     navController: NavController,
-    viewModel: CreateEventViewModel = hiltViewModel()
+    viewModel: EditEventViewModel = hiltViewModel()
 ) {
-    // Escuchar evento de navegación para salir al terminar
     LaunchedEffect(true) {
         viewModel.navigationEvent.collect {
-            navController.popBackStack()
+            navController.popBackStack() // Volver al detalle
         }
     }
 
-    // Estado local para controlar si el menú está expandido o no
+    // Copiamos la lógica del Dropdown de Categorías
     var expanded by remember { mutableStateOf(false) }
-
-    // Lista de categorías existentes
     val categories = listOf("Música", "Deporte", "Teatro", "Cine", "Arte", "Conferencia", "Otro")
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Crear Evento", fontWeight = FontWeight.Bold) },
+                title = { Text("Editar Evento", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
@@ -61,7 +57,7 @@ fun CreateEventScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Campo Título
+            // Título
             OutlinedTextField(
                 value = viewModel.title,
                 onValueChange = { viewModel.title = it },
@@ -70,23 +66,17 @@ fun CreateEventScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Campo Días Faltantes
+            // Días Faltantes
             OutlinedTextField(
                 value = viewModel.daysUntilEvent,
-                onValueChange = {
-                    if (it.all { char -> char.isDigit() }) {
-                        viewModel.daysUntilEvent = it
-                    }
-                },
-                label = { Text("¿En cuántos días será? (ej: 5)") },
-                placeholder = { Text("0 = Hoy") },
+                onValueChange = { if (it.all { char -> char.isDigit() }) viewModel.daysUntilEvent = it },
+                label = { Text("Días faltantes (Editar fecha)") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            // Campo Descripción
+            // Descripción
             OutlinedTextField(
                 value = viewModel.description,
                 onValueChange = { viewModel.description = it },
@@ -95,42 +85,29 @@ fun CreateEventScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
+            // Categoría y Precio
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-
-                // 👇 CAMBIO: Selector de Categoría (Dropdown)
                 Box(modifier = Modifier.weight(1f)) {
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
-                    ) {
+                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                         OutlinedTextField(
                             value = viewModel.category,
-                            onValueChange = {}, // Solo lectura, se cambia con el menú
+                            onValueChange = {},
                             readOnly = true,
                             label = { Text("Categoría") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.menuAnchor() // Necesario para anclar el menú
+                            modifier = Modifier.menuAnchor()
                         )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
+                        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                             categories.forEach { selectionOption ->
                                 DropdownMenuItem(
                                     text = { Text(selectionOption) },
-                                    onClick = {
-                                        viewModel.category = selectionOption
-                                        expanded = false
-                                    }
+                                    onClick = { viewModel.category = selectionOption; expanded = false }
                                 )
                             }
                         }
                     }
                 }
-
-                // Campo Precio
                 OutlinedTextField(
                     value = viewModel.price,
                     onValueChange = { viewModel.price = it },
@@ -140,16 +117,16 @@ fun CreateEventScreen(
                 )
             }
 
-            // Campo URL Imagen
+            // Imagen
             OutlinedTextField(
                 value = viewModel.imageUrl,
                 onValueChange = { viewModel.imageUrl = it },
-                label = { Text("URL de imagen (Opcional)") },
+                label = { Text("URL de imagen") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Campo Texto Largo
+            // Texto Largo
             OutlinedTextField(
                 value = viewModel.text,
                 onValueChange = { viewModel.text = it },
@@ -161,17 +138,13 @@ fun CreateEventScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón Guardar
             Button(
-                onClick = { viewModel.onSaveEvent() },
+                onClick = { viewModel.onUpdateEvent() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                // Validamos que tenga título, categoría y días
-                enabled = viewModel.title.isNotBlank() &&
-                        viewModel.daysUntilEvent.isNotBlank() &&
-                        viewModel.category.isNotBlank()
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA000))
             ) {
-                Text("Publicar Evento", fontSize = 18.sp)
+                Text("Guardar Cambios", fontSize = 18.sp)
             }
         }
     }

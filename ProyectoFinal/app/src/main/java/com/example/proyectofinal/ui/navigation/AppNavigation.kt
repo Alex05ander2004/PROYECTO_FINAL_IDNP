@@ -19,6 +19,7 @@ import com.example.proyectofinal.ui.screens.explore.ExploreScreen
 import com.example.proyectofinal.ui.screens.notifications.NotificationsScreen
 // import com.example.proyectofinal.ui.screens.profile.ProfileScreen <-- YA NO SE USA
 import com.example.proyectofinal.ui.screens.settings.SettingsScreen
+import com.example.proyectofinal.ui.screens.edit.EditEventScreen
 
 @Composable
 fun AppNavigation() {
@@ -78,6 +79,14 @@ fun AppNavigation() {
             ) {
                 // EventDetailScreen ya no recibe argumentos manuales, Hilt los maneja
                 EventDetailScreen(navController = navController)
+            }
+            // 👇 NUEVA RUTA: Editar Evento
+            composable(
+                route = "editar_evento/{eventId}",
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) {
+                // Hilt inyectará el eventId en el EditEventViewModel automáticamente
+                EditEventScreen(navController = navController)
             }
         }
     }

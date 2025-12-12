@@ -1,6 +1,5 @@
 package com.example.proyectofinal.ui.screens.explore
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,16 +8,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.* // Importante para remember, mutableStateOf, etc.
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,81 +33,94 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.domain.model.Event
 import com.example.proyectofinal.ui.components.BottomNavigationBar
 
-private const val TAG = "ExploreScreen"
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
     navController: NavController,
     viewModel: ExploreViewModel = hiltViewModel()
 ) {
-    // 1. Nos suscribimos a la lista de eventos del ViewModel
+    // 1. Datos del ViewModel
     val allEvents by viewModel.events.collectAsState()
-    Log.d(TAG, "ExploreScreen se está recomponiendo con ${allEvents.size} eventos.")
 
-    // 2. Lógica local para búsqueda y filtrado
-    var search by remember { mutableStateOf("") }
+    // 2. Estados Locales para Búsqueda y Filtros
+    var searchText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Todos") }
 
-    // Calculamos las categorías dinámicamente
+    // Gestor de foco para ocultar teclado
+    val focusManager = LocalFocusManager.current
+
+    // 3. Calculamos categorías disponibles (dinámico)
     val categories = remember(allEvents) {
         listOf("Todos") + allEvents.map { it.category }.distinct()
     }
 
-    // Filtramos los eventos según la búsqueda y categoría
-    val filteredEvents = remember(search, selectedCategory, allEvents) {
-        allEvents
-            .filter { event ->
-                if (selectedCategory == "Todos") true else event.category == selectedCategory
+    // 4. LÓGICA DE FILTRADO (Aquí es donde ocurre la magia)
+    val filteredEvents = remember(searchText, selectedCategory, allEvents) {
+        allEvents.filter { event ->
+            // Filtro 1: Categoría
+            val matchCategory = if (selectedCategory == "Todos") true else event.category == selectedCategory
+
+            // Filtro 2: Texto (Título o Descripción)
+            val matchText = if (searchText.isBlank()) true else {
+                event.title.contains(searchText, ignoreCase = true) ||
+                        event.description.contains(searchText, ignoreCase = true) ||
+                        event.category.contains(searchText, ignoreCase = true)
             }
-            .filter { event ->
-                if (search.isBlank()) true else {
-                    event.title.contains(search, ignoreCase = true) ||
-                            event.description.contains(search, ignoreCase = true)
-                }
-            }
+
+            matchCategory && matchText
+        }
     }
 
     Scaffold(
+        // Ya no usamos bottomBar aquí porque está en AppNavigation
+        // Ya no usamos floatingActionButton aquí porque está en BottomNavBar
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding) // Usamos el padding del Scaffold
+                .padding(innerPadding)
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            // --- HEADER: Título ---
+            // --- HEADER ---
             CenterAlignedTopAppBar(
                 title = {
-                    Text(
-                        text = "Explorar",
-                        color = Color(0xFF111618),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
+                    Text("Explorar", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
 
-            // --- BARRA DE BÚSQUEDA ---
+            // --- BARRA DE BÚSQUEDA MEJORADA ---
             OutlinedTextField(
-                value = search,
-                onValueChange = { search = it },
+                value = searchText,
+                onValueChange = { searchText = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("Buscar eventos...") },
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF617C89))
+                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
                 },
-                placeholder = { Text("Buscar eventos", color = Color(0xFF617C89)) },
+                // 👇 NUEVO: Botón 'X' para borrar texto
+                trailingIcon = {
+                    if (searchText.isNotEmpty()) {
+                        IconButton(onClick = { searchText = "" }) {
+                            Icon(Icons.Default.Close, contentDescription = "Borrar", tint = Color.Gray)
+                        }
+                    }
+                },
+                // 👇 NUEVO: Configuración del teclado (Botón 'Buscar' y cerrar teclado)
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = { focusManager.clearFocus() }
+                ),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFF0F3F4),
                     unfocusedContainerColor = Color(0xFFF0F3F4),
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Transparent
-                ),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = Color.Transparent
+                )
             )
 
             // --- FILTRO DE CATEGORÍAS ---
@@ -112,29 +130,42 @@ fun ExploreScreen(
             ) {
                 items(categories) { category ->
                     val isSelected = category == selectedCategory
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { selectedCategory = category }
-                            .background(if (isSelected) Color(0xFF13A4EC) else Color(0xFFF0F3F4))
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            category,
-                            color = if (isSelected) Color.White else Color(0xFF111618),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedCategory = category },
+                        label = { Text(category) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White,
+                            containerColor = Color(0xFFF0F3F4),
+                            labelColor = Color.Black
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = Color.Transparent
                         )
-                    }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // --- LISTA DE EVENTOS ---
+            // --- LISTA DE RESULTADOS ---
             if (filteredEvents.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Text("No se encontraron eventos", color = Color.Gray)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(64.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No se encontraron resultados para\n\"$searchText\"",
+                            color = Color.Gray,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
@@ -151,9 +182,10 @@ fun ExploreScreen(
     }
 }
 
+// Reutilizamos el EventCard que ya funcionaba (asegúrate de que esté en el archivo)
 @Composable
 fun EventCard(event: Event, navController: NavController) {
-    Card( // Envuelvo en Card para mejor estilo
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { navController.navigate("detalle_evento/${event.id}") },
@@ -163,7 +195,7 @@ fun EventCard(event: Event, navController: NavController) {
         Row(
             modifier = Modifier
                 .padding(12.dp)
-                .height(IntrinsicSize.Min), // Altura dinámica
+                .height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -190,9 +222,9 @@ fun EventCard(event: Event, navController: NavController) {
                 painter = rememberAsyncImagePainter(event.imageUrl),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(100.dp) // Tamaño fijo para la imagen
+                    .size(100.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color.LightGray), // Placeholder visual
+                    .background(Color.LightGray),
                 contentScale = ContentScale.Crop
             )
         }

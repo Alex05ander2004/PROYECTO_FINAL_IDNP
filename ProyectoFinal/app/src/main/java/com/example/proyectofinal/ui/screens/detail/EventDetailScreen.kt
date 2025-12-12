@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -61,8 +62,9 @@ fun EventDetailScreen(
                 EventDetailContent(
                     event = event,
                     modifier = Modifier.padding(innerPadding),
-                    // 👇 Pasamos la función del ViewModel al contenido
-                    onToggleAgenda = { viewModel.toggleAgendaStatus() }
+                    onToggleAgenda = { viewModel.toggleAgendaStatus() },
+                    // 👇 Pasamos el navController aquí
+                    navController = navController
                 )
             }
 
@@ -89,7 +91,8 @@ fun EventDetailScreen(
 fun EventDetailContent(
     event: Event,
     modifier: Modifier = Modifier,
-    onToggleAgenda: () -> Unit // Callback para el botón
+    onToggleAgenda: () -> Unit,
+    navController: NavController // 👇 Recibimos el navController aquí
 ) {
     // --- LÓGICA DE FECHAS ---
     val now = System.currentTimeMillis()
@@ -99,7 +102,7 @@ fun EventDetailContent(
     val diff = event.dateTimestamp - now
     val daysRemaining = TimeUnit.MILLISECONDS.toDays(diff)
 
-    // Formateador de fecha legible (ej: "15 oct, 2024")
+    // Formateador de fecha legible
     val dateFormat = SimpleDateFormat("dd MMM, yyyy - hh:mm a", Locale.getDefault())
     val dateString = dateFormat.format(Date(event.dateTimestamp))
 
@@ -133,7 +136,7 @@ fun EventDetailContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // --- SECCIÓN DE FECHA (NUEVO) ---
+        // --- SECCIÓN DE FECHA ---
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Default.DateRange,
@@ -148,7 +151,7 @@ fun EventDetailContent(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
-                // Texto de estado (Pasado o "En X días")
+                // Texto de estado
                 Text(
                     text = if (isEventPast) "Evento Finalizado" else "Faltan $daysRemaining días",
                     style = MaterialTheme.typography.bodySmall,
@@ -197,29 +200,45 @@ fun EventDetailContent(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // --- BOTÓN DE ACCIÓN INTELIGENTE (MODIFICADO) ---
-        val buttonText = when {
-            isEventPast -> "Evento Finalizado"
-            event.isInAgenda -> "Dejar de asistir"
-            else -> "Asistir al evento"
-        }
+        // --- LÓGICA DE BOTONES ---
+        if (event.isUserCreated) {
+            // OPCIÓN A: ES MI EVENTO -> BOTÓN EDITAR
+            Button(
+                // Ahora sí funciona porque recibimos navController
+                onClick = { navController.navigate("editar_evento/${event.id}") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFA000)
+                )
+            ) {
+                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Editar Evento", fontSize = 18.sp)
+            }
+        } else {
+            // OPCIÓN B: NO ES MI EVENTO -> BOTÓN ASISTIR
+            val buttonText = when {
+                isEventPast -> "Evento Finalizado"
+                event.isInAgenda -> "Dejar de asistir"
+                else -> "Asistir al evento"
+            }
 
-        val buttonColor = when {
-            isEventPast -> Color.Gray
-            event.isInAgenda -> MaterialTheme.colorScheme.secondary // Color diferente si ya asistes
-            else -> MaterialTheme.colorScheme.primary // Color normal
-        }
+            val buttonColor = when {
+                isEventPast -> Color.Gray
+                event.isInAgenda -> MaterialTheme.colorScheme.secondary
+                else -> MaterialTheme.colorScheme.primary
+            }
 
-        Button(
-            onClick = onToggleAgenda,
-            enabled = !isEventPast, // 🚫 Deshabilitado si ya pasó
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = buttonColor
-            )
-        ) {
-            Text(buttonText, fontSize = 18.sp)
+            Button(
+                onClick = onToggleAgenda,
+                enabled = !isEventPast,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+            ) {
+                Text(buttonText, fontSize = 18.sp)
+            }
         }
     }
 }
