@@ -1,4 +1,3 @@
-// ui/screens/explore/ExploreScreen.kt
 package com.example.proyectofinal.ui.screens.explore
 
 import android.util.Log
@@ -14,11 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.* // Importante para remember, mutableStateOf, etc.
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,7 +27,6 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.domain.model.Event
 import com.example.proyectofinal.ui.components.BottomNavigationBar
-import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
 
 private const val TAG = "ExploreScreen"
 
@@ -43,13 +40,16 @@ fun ExploreScreen(
     val allEvents by viewModel.events.collectAsState()
     Log.d(TAG, "ExploreScreen se está recomponiendo con ${allEvents.size} eventos.")
 
+    // 2. Lógica local para búsqueda y filtrado
+    var search by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Todos") }
+
+    // Calculamos las categorías dinámicamente
     val categories = remember(allEvents) {
         listOf("Todos") + allEvents.map { it.category }.distinct()
     }
 
-    var search by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Todos") }
-
+    // Filtramos los eventos según la búsqueda y categoría
     val filteredEvents = remember(search, selectedCategory, allEvents) {
         allEvents
             .filter { event ->
@@ -64,66 +64,33 @@ fun ExploreScreen(
     }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController, selected = "explorar") },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("create_event") },
-                containerColor = Color(0xFF13A4EC)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Crear Evento", tint = Color.White)
-            }
-        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(56.dp),
-            leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            },
-            placeholder = { Text("Buscar eventos", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                focusedBorderColor = MaterialTheme.colorScheme.primary
-            ),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true
-        )
-
-        // Categorías
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp)
+                .padding(innerPadding) // Usamos el padding del Scaffold
+                .fillMaxSize()
+                .background(Color.White)
         ) {
-            items(uiState.categories) { category ->
-                val isSelected = category == uiState.selectedCategory
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { viewModel.onCategorySelected(category) }
-                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
+            // --- HEADER: Título ---
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
-                        category,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                        text = "Explorar",
+                        color = Color(0xFF111618),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
 
+            // --- BARRA DE BÚSQUEDA ---
             OutlinedTextField(
                 value = search,
                 onValueChange = { search = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(56.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF617C89))
                 },
@@ -134,12 +101,14 @@ fun ExploreScreen(
                     unfocusedBorderColor = Color.Transparent,
                     focusedBorderColor = Color.Transparent
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
 
+            // --- FILTRO DE CATEGORÍAS ---
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 items(categories) { category ->
                     val isSelected = category == selectedCategory
@@ -159,17 +128,23 @@ fun ExploreScreen(
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(filteredEvents) { event ->
-                    EventCard(event, navController)
+            // --- LISTA DE EVENTOS ---
+            if (filteredEvents.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Text("No se encontraron eventos", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(filteredEvents) { event ->
+                        EventCard(event, navController)
+                    }
                 }
             }
         }
@@ -178,42 +153,48 @@ fun ExploreScreen(
 
 @Composable
 fun EventCard(event: Event, navController: NavController) {
-    Row(
+    Card( // Envuelvo en Card para mejor estilo
         modifier = Modifier
             .fillMaxWidth()
             .clickable { navController.navigate("detalle_evento/${event.id}") },
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F9FA))
     ) {
-        Column(modifier = Modifier.weight(2f)) {
-            Text(event.category, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-            Text(event.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(
-                event.description,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 13.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .height(IntrinsicSize.Min), // Altura dinámica
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(event.category, color = Color(0xFF617C89), fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    event.title,
+                    color = Color(0xFF111618),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    event.description,
+                    color = Color(0xFF617C89),
+                    fontSize = 13.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Image(
+                painter = rememberAsyncImagePainter(event.imageUrl),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp) // Tamaño fijo para la imagen
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.LightGray), // Placeholder visual
+                contentScale = ContentScale.Crop
             )
         }
-        Image(
-            painter = rememberAsyncImagePainter(event.imageUrl),
-            contentDescription = null,
-            modifier = Modifier
-                .weight(1f)
-                .aspectRatio(16 / 9f)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ExploreScreenPreview() {
-    ProyectoFinalTheme {
-        val navController = rememberNavController()
-        // Preview no funcionará con ViewModel directamente, se necesitaría un estado falso.
-        // Por ahora, lo dejamos así, pero la funcionalidad en la app es lo importante.
-        ExploreScreen(navController)
     }
 }

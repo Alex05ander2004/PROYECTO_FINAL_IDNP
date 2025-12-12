@@ -1,10 +1,10 @@
-
 package com.example.proyectofinal.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings // Usamos icono de Settings
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -32,10 +32,20 @@ fun BottomNavigationBar(
             )
         )
         NavigationBarItem(
+            selected = selected == "crear",
+            onClick = { navController.navigate("crear") },
+            icon = { Icon(Icons.Default.Create, contentDescription = null) },
+            label = { Text("Crear") }, // Texto más corto para que quepa bien
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF111618),
+                unselectedIconColor = Color(0xFF617C89)
+            )
+        )
+        NavigationBarItem(
             selected = selected == "agenda",
             onClick = { navController.navigate("agenda") },
             icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
-            label = { Text("Mi Agenda") },
+            label = { Text("Agenda") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF111618),
                 unselectedIconColor = Color(0xFF617C89)
@@ -45,17 +55,18 @@ fun BottomNavigationBar(
             selected = selected == "notificaciones",
             onClick = { navController.navigate("notificaciones") },
             icon = { Icon(Icons.Default.Notifications, contentDescription = null) },
-            label = { Text("Notificaciones") },
+            label = { Text("Avisos") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF111618),
                 unselectedIconColor = Color(0xFF617C89)
             )
         )
+        // 👇 CAMBIO IMPORTANTE: La ruta interna es "settings", la etiqueta es "Configuración"
         NavigationBarItem(
-            selected = selected == "perfil",
-            onClick = { navController.navigate("perfil") },
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-            label = { Text("Perfil") },
+            selected = selected == "settings",
+            onClick = { navController.navigate("settings") },
+            icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+            label = { Text("Ajustes") },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF111618),
                 unselectedIconColor = Color(0xFF617C89)

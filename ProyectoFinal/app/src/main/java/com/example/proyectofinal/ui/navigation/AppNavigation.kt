@@ -13,10 +13,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.proyectofinal.ui.components.BottomNavigationBar
 import com.example.proyectofinal.ui.screens.agenda.AgendaScreen
-import com.example.proyectofinal.ui.screens.detail.EventDetailScreen
+import com.example.proyectofinal.ui.screens.create.CreateEventScreen // 👈 IMPORTANTE
+import com.example.proyectofinal.ui.screens.eventdetail.EventDetailScreen
 import com.example.proyectofinal.ui.screens.explore.ExploreScreen
 import com.example.proyectofinal.ui.screens.notifications.NotificationsScreen
-import com.example.proyectofinal.ui.screens.profile.ProfileScreen
+// import com.example.proyectofinal.ui.screens.profile.ProfileScreen <-- YA NO SE USA
 import com.example.proyectofinal.ui.screens.settings.SettingsScreen
 
 @Composable
@@ -27,8 +28,16 @@ fun AppNavigation() {
 
     Scaffold(
         bottomBar = {
-            // Solo muestra la barra de navegación en las pantallas principales
-            if (currentRoute in listOf("explorar", "agenda", "notificaciones", "perfil")) {
+            // 👇 LISTA CORREGIDA: Agregamos "settings" y quitamos "perfil"
+            val showBottomBar = currentRoute in listOf(
+                "explorar",
+                "crear",
+                "agenda",
+                "notificaciones",
+                "settings" // Coincide con la ruta del NavHost
+            )
+
+            if (showBottomBar) {
                 BottomNavigationBar(
                     navController = navController,
                     selected = currentRoute ?: "explorar"
@@ -44,24 +53,31 @@ fun AppNavigation() {
             composable("explorar") {
                 ExploreScreen(navController = navController)
             }
+
+            // 👇 AGREGADO: La pantalla para crear eventos
+            composable("crear") {
+                CreateEventScreen(navController = navController)
+            }
+
             composable("agenda") {
                 AgendaScreen(navController = navController)
             }
             composable("notificaciones") {
                 NotificationsScreen(navController = navController)
             }
-            composable("perfil") {
-                ProfileScreen(navController = navController)
-            }
+
+            // 👇 ELIMINADO: composable("perfil") ya no existe.
+
             composable("settings") {
                 SettingsScreen(navController = navController)
             }
+
             composable(
                 route = "detalle_evento/{eventId}",
                 arguments = listOf(navArgument("eventId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val eventId = backStackEntry.arguments?.getString("eventId")
-                EventDetailScreen(navController = navController, eventId = eventId)
+            ) {
+                // EventDetailScreen ya no recibe argumentos manuales, Hilt los maneja
+                EventDetailScreen(navController = navController)
             }
         }
     }

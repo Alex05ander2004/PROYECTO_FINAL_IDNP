@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -64,7 +64,7 @@ fun SettingsScreen(
             item {
                 SettingsSwitchItem(
                     title = "Modo oscuro",
-                    icon = Icons.Filled.Palette,
+                    icon = Icons.Default.Edit,
                     checked = uiState.isDarkTheme,
                     onCheckedChange = { viewModel.onThemeChange(it) }
                 )

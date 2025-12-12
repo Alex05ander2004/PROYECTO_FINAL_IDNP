@@ -11,26 +11,39 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class EventRepositoryImpl @Inject constructor(
-    private val dao: EventDao
-    // Ya no inyectamos la fuente estática porque es un 'object' global
+    private val dao: EventDao,
+    private val staticDataSource: StaticEventDataSource
 ) : EventRepository {
 
     override fun getEvents(): Flow<List<Event>> {
         return dao.getAll().map { entities ->
             val dbEvents = entities.map { it.toDomain() }
+            val staticEvents = staticDataSource.getBaseEvents()
 
-            // Accedemos directamente al 'object' StaticEventDataSource
-            val staticEvents = StaticEventDataSource.events
+            // Combinamos: Si un evento estático ya está en BD (por ID), usamos la versión de BD
+            // para que se mantengan los cambios (como isInAgenda = true)
+            val mergedEvents = staticEvents.map { static ->
+                dbEvents.find { it.id == static.id } ?: static
+            } + dbEvents.filter { db -> staticEvents.none { it.id == db.id } }
 
-            // Unimos ambas listas
-            staticEvents + dbEvents
+            mergedEvents
         }
     }
 
     override fun getEventById(id: String): Flow<Event?> {
         return dao.getById(id).map { entity ->
-            // Si no está en BD, busca en estáticos (Fallback)
-            entity?.toDomain() ?: StaticEventDataSource.events.find { it.id == id }
+            // 1. Si existe en la BD (porque ya le dimos guardar), usamos ese.
+            // 2. Si no, lo buscamos en los estáticos.
+            entity?.toDomain() ?: staticDataSource.getBaseEvents().find { it.id == id }
+        }
+    }
+
+    override fun getAgendaEvents(): Flow<List<Event>> {
+        // Aquí también debemos tener cuidado. Si solo consultamos la BD,
+        // los estáticos nunca aparecerán hasta que los guardemos.
+        // Pero para la "Agenda", esto es correcto: solo queremos ver lo que hemos guardado o creado.
+        return dao.getAgendaEvents().map { entities ->
+            entities.map { it.toDomain() }
         }
     }
 
@@ -39,16 +52,14 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateEvent(event: Event) {
-        dao.update(event.toEntity())
+        // 🚨 CAMBIO CLAVE AQUÍ:
+        // Usamos 'insert' en lugar de 'update'.
+        // Al tener OnConflictStrategy.REPLACE en el DAO, esto funciona como un "Guardar o Actualizar".
+        // Si el evento era estático (no existía en BD), ahora se GUARDARÁ en la BD con el nuevo estado.
+        dao.insert(event.toEntity())
     }
 
     override suspend fun deleteEvent(event: Event) {
         dao.delete(event.toEntity())
-    }
-
-    override fun getAgendaEvents(): Flow<List<Event>> {
-        return dao.getAgendaEvents().map { entities ->
-            entities.map { it.toDomain() }
-        }
     }
 }

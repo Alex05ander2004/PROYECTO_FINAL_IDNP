@@ -1,4 +1,3 @@
-// ui/screens/eventdetail/EventDetailViewModel.kt
 package com.example.proyectofinal.ui.screens.eventdetail
 
 import androidx.lifecycle.SavedStateHandle
@@ -27,6 +26,23 @@ class EventDetailViewModel @Inject constructor(
     }
 
     fun retry() = loadEvent()
+
+    // 👇 NUEVA FUNCIÓN: Cambiar estado de asistencia
+    fun toggleAgendaStatus() {
+        // Solo podemos actuar si ya tenemos el evento cargado (Success)
+        val currentState = _uiState.value
+        if (currentState is EventDetailUiState.Success) {
+            val currentEvent = currentState.event
+
+            // Creamos una copia del evento con el valor invertido
+            val updatedEvent = currentEvent.copy(isInAgenda = !currentEvent.isInAgenda)
+
+            viewModelScope.launch {
+                // Guardamos en BD. Room notificará el cambio automáticamente via Flow.
+                eventRepository.updateEvent(updatedEvent)
+            }
+        }
+    }
 
     private fun loadEvent() {
         viewModelScope.launch {

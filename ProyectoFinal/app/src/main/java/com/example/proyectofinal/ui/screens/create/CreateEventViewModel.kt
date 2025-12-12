@@ -26,6 +26,10 @@ class CreateEventViewModel @Inject constructor(
     var imageUrl by mutableStateOf("")
     var text by mutableStateOf("")
 
+    // 👇 1. AGREGADO: Variable de estado para la fecha.
+    // Por defecto tiene la hora actual del sistema.
+    var dateTimestamp by mutableStateOf(System.currentTimeMillis())
+
     private val _navigationEvent = Channel<Unit>()
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
@@ -38,11 +42,20 @@ class CreateEventViewModel @Inject constructor(
                 category = category,
                 price = price,
                 imageUrl = imageUrl,
-                text = text
+                text = text,
+
+                // 👇 2. AGREGADO: Asignamos la fecha
+                dateTimestamp = dateTimestamp,
+
+                // 👇 3. IMPORTANTE: Marcamos que este evento lo creó el usuario
+                isUserCreated = true,
+
+                // Por defecto no está en la agenda (o true, si prefieres que se auto-agende)
+                isInAgenda = false
             )
-            
+
             repository.createEvent(newEvent)
-            
+
             _navigationEvent.send(Unit)
         }
     }
