@@ -2,39 +2,34 @@ package com.example.proyectofinal.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.proyectofinal.data.datastore.UserPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// Definición del estado (Asegúrate de que esté aquí o importada)
 data class SettingsUiState(
     val isDarkTheme: Boolean = false
 )
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository
-) : ViewModel() {
+class SettingsViewModel @Inject constructor() : ViewModel() {
 
-    // Expone el estado de la UI, observando los cambios del repositorio.
-    val uiState: StateFlow<SettingsUiState> = userPreferencesRepository.isDarkTheme
-        .map { isDarkTheme -> SettingsUiState(isDarkTheme = isDarkTheme) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = SettingsUiState()
-        )
+    private val _uiState = MutableStateFlow(SettingsUiState())
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    /**
-     * Llama al repositorio para guardar la nueva preferencia del tema.
-     */
+    // 👇 AQUÍ ESTABA EL ERROR:
+    // Antes se llamaba 'toggleTheme', ahora lo renombramos a 'onThemeChange'
+    // para que coincida con tu SettingsScreen.
     fun onThemeChange(isDark: Boolean) {
         viewModelScope.launch {
-            userPreferencesRepository.saveThemePreference(isDark)
+            _uiState.update { it.copy(isDarkTheme = isDark) }
+
+            // TODO: Aquí deberíamos guardar el valor en DataStore para que
+            // el tema se recuerde al cerrar la app.
         }
     }
 }

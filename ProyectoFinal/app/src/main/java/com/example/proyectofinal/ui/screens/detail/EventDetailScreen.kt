@@ -1,4 +1,3 @@
-// ui/screens/eventdetail/EventDetailScreen.kt
 package com.example.proyectofinal.ui.screens.eventdetail
 
 import androidx.compose.foundation.Image
@@ -9,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.domain.model.Event
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +58,12 @@ fun EventDetailScreen(
 
             is EventDetailUiState.Success -> {
                 val event = (uiState as EventDetailUiState.Success).event
-                EventDetailContent(event = event, modifier = Modifier.padding(innerPadding))
+                EventDetailContent(
+                    event = event,
+                    modifier = Modifier.padding(innerPadding),
+                    // 👇 Pasamos la función del ViewModel al contenido
+                    onToggleAgenda = { viewModel.toggleAgendaStatus() }
+                )
             }
 
             is EventDetailUiState.Error -> {
@@ -77,7 +86,23 @@ fun EventDetailScreen(
 }
 
 @Composable
-fun EventDetailContent(event: Event, modifier: Modifier = Modifier) {
+fun EventDetailContent(
+    event: Event,
+    modifier: Modifier = Modifier,
+    onToggleAgenda: () -> Unit // Callback para el botón
+) {
+    // --- LÓGICA DE FECHAS ---
+    val now = System.currentTimeMillis()
+    val isEventPast = event.dateTimestamp < now
+
+    // Cálculo de días restantes
+    val diff = event.dateTimestamp - now
+    val daysRemaining = TimeUnit.MILLISECONDS.toDays(diff)
+
+    // Formateador de fecha legible (ej: "15 oct, 2024")
+    val dateFormat = SimpleDateFormat("dd MMM, yyyy - hh:mm a", Locale.getDefault())
+    val dateString = dateFormat.format(Date(event.dateTimestamp))
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -108,6 +133,32 @@ fun EventDetailContent(event: Event, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // --- SECCIÓN DE FECHA (NUEVO) ---
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.DateRange,
+                contentDescription = null,
+                tint = if (isEventPast) Color.Gray else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = dateString,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                // Texto de estado (Pasado o "En X días")
+                Text(
+                    text = if (isEventPast) "Evento Finalizado" else "Faltan $daysRemaining días",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isEventPast) Color.Red else Color(0xFF617C89)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Categoría y precio
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -136,7 +187,6 @@ fun EventDetailContent(event: Event, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Texto adicional (si tienes)
         if (event.text.isNotBlank()) {
             Text(
                 text = event.text,
@@ -147,13 +197,29 @@ fun EventDetailContent(event: Event, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Botón de acción (ejemplo)
+        // --- BOTÓN DE ACCIÓN INTELIGENTE (MODIFICADO) ---
+        val buttonText = when {
+            isEventPast -> "Evento Finalizado"
+            event.isInAgenda -> "Dejar de asistir"
+            else -> "Asistir al evento"
+        }
+
+        val buttonColor = when {
+            isEventPast -> Color.Gray
+            event.isInAgenda -> MaterialTheme.colorScheme.secondary // Color diferente si ya asistes
+            else -> MaterialTheme.colorScheme.primary // Color normal
+        }
+
         Button(
-            onClick = { /* Agregar a agenda, comprar entrada, etc. */ },
+            onClick = onToggleAgenda,
+            enabled = !isEventPast, // 🚫 Deshabilitado si ya pasó
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = buttonColor
+            )
         ) {
-            Text("Asistir al evento", fontSize = 18.sp)
+            Text(buttonText, fontSize = 18.sp)
         }
     }
 }

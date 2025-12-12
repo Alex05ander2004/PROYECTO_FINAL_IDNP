@@ -104,11 +104,3 @@ fun CreateEventScreen(
         }
     }
 }
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun CreateEventScreenPreview() {
-    ProyectoFinalTheme {
-        CreateEventScreen(rememberNavController())
-    }
-}

@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,7 +27,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.proyectofinal.domain.model.Event
+import com.example.proyectofinal.ui.components.BottomNavigationBar
 import com.example.proyectofinal.ui.theme.ProyectoFinalTheme
+// Asegúrate de importar el UiState del paquete correcto
+import com.example.proyectofinal.ui.screens.agenda.AgendaUiState
 
 @Composable
 fun AgendaScreen(
@@ -37,7 +41,8 @@ fun AgendaScreen(
 
     AgendaContent(
         uiState = uiState,
-        navController = navController
+        navController = navController,
+        selectedTab = "agenda"
     )
 }
 
@@ -45,55 +50,62 @@ fun AgendaScreen(
 @Composable
 fun AgendaContent(
     uiState: AgendaUiState,
-    navController: NavController
+    navController: NavController,
+    selectedTab: String
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
-        CenterAlignedTopAppBar(
-            title = {
-                Text(
-                    text = "Mi Agenda",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
-                }
-            },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
-        )
-
-        if (uiState.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (uiState.upcomingEvents.isEmpty() && uiState.pastEvents.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No tienes eventos agendados aún", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (uiState.upcomingEvents.isNotEmpty()) {
-                    item { SectionTitle("Próximos") }
-                    items(uiState.upcomingEvents) { event ->
-                        AgendaEventItem(event, navController)
+    Scaffold(
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Mi Agenda",
+                        color = Color(0xFF111618),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color(0xFF111618))
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+            )
 
-                if (uiState.pastEvents.isNotEmpty()) {
-                    item { SectionTitle("Pasados") }
-                    items(uiState.pastEvents) { event ->
-                        AgendaEventItem(event, navController)
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState.createdEvents.isEmpty() && uiState.addedEvents.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No tienes eventos en tu agenda", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // SECCIÓN 1: Mis Eventos Creados
+                    if (uiState.createdEvents.isNotEmpty()) {
+                        item { SectionTitle("Mis Publicaciones") }
+                        items(uiState.createdEvents) { event ->
+                            AgendaEventItem(event, navController)
+                        }
+                    }
+
+                    // SECCIÓN 2: Eventos Guardados (Interés)
+                    if (uiState.addedEvents.isNotEmpty()) {
+                        item { SectionTitle("Eventos Guardados") }
+                        items(uiState.addedEvents) { event ->
+                            AgendaEventItem(event, navController)
+                        }
                     }
                 }
             }
@@ -105,10 +117,10 @@ fun AgendaContent(
 fun SectionTitle(title: String) {
     Text(
         text = title,
-        color = MaterialTheme.colorScheme.onSurface,
+        color = Color(0xFF111618),
         fontWeight = FontWeight.Bold,
         fontSize = 18.sp,
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
     )
 }
 
@@ -133,13 +145,13 @@ fun AgendaEventItem(event: Event, navController: NavController) {
         Column {
             Text(
                 text = event.title,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color(0xFF111618),
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp
             )
             Text(
-                text = event.description,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = event.category, // Mostramos categoría o descripción
+                color = Color(0xFF617C89),
                 fontSize = 13.sp,
                 maxLines = 1
             )
@@ -147,19 +159,39 @@ fun AgendaEventItem(event: Event, navController: NavController) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AgendaScreenPreview() {
     ProyectoFinalTheme(darkTheme = false) {
         val navController = rememberNavController()
+        val now = System.currentTimeMillis()
+
+        // 1. Evento Creado por Mí (isUserCreated = true)
+        val myEvent = Event(
+            id = "1", title = "Mi Torneo de Fútbol", description = "Organizado por mí",
+            dateTimestamp = now, category = "Deporte", price = "$0", imageUrl = "", text = "",
+            isUserCreated = true, // 👈 CLAVE
+            isInAgenda = false
+        )
+
+        // 2. Evento Guardado (isInAgenda = true)
+        val savedEvent = Event(
+            id = "2", title = "Concierto de Rock", description = "Me interesa ir",
+            dateTimestamp = now, category = "Música", price = "$50", imageUrl = "", text = "",
+            isUserCreated = false,
+            isInAgenda = true // 👈 CLAVE
+        )
+
         val dummyUiState = AgendaUiState(
-            upcomingEvents = listOf(Event(id = "1", title = "Upcoming Event", description = "Description", dateTimestamp = 0, category = "Music", price = "$10", imageUrl = "", text = "")),
-            pastEvents = listOf(Event(id = "2", title = "Past Event", description = "Description", dateTimestamp = 0, category = "Art", price = "$5", imageUrl = "", text = "")),
+            createdEvents = listOf(myEvent),
+            addedEvents = listOf(savedEvent),
             isLoading = false
         )
+
         AgendaContent(
             uiState = dummyUiState,
-            navController = navController
+            navController = navController,
+            selectedTab = "agenda"
         )
     }
 }
